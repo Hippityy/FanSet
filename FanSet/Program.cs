@@ -61,40 +61,55 @@ namespace FanSet
             computer.Open();
             computer.Accept(new UpdateVisitor());
 
+            var sensors = GetAllControlSensors(computer);
+
+            SetFanSpeeds(sensors, pairs);
+            //computer.Close(); //-- resets the fans, bad
+        }
+        static ISensor[] GetAllControlSensors(Computer computer)
+        {
+            List<ISensor> sensorList = new List<ISensor>();
             foreach (var hardware in computer.Hardware)
             {
                 foreach (var subhardware in hardware.SubHardware)
                 {
-                    subhardware.Update();
-                    
                     foreach (var sensor in subhardware.Sensors)
                     {
                         if (sensor.SensorType == SensorType.Control)
                         {
-                            if (pairs.Count == 0)
-                            {
-                                Console.Write(sensor.Name + "(" + sensor.Identifier.ToString() + ") == ");
-                                Console.Write(Math.Round(sensor.Value ?? 0));
-                                Console.WriteLine('%');
-                            }
-                            else
-                            {
-                                k = sensor.Identifier.ToString();
-
-                                if (pairs.TryGetValue(k, out j))
-                                {
-                                    Console.Write(sensor.Identifier);
-                                    Console.Write(" = ");
-                                    sensor.Control.SetSoftware(j);
-                                    Console.Write(j);
-                                    Console.WriteLine("%");
-                                }
-                            }
+                            sensorList.Add(sensor);
                         }
                     }
                 }
             }
-            //computer.Close(); -- resets the fans, bad
+            return sensorList.ToArray();
+        }
+
+        static void SetFanSpeeds(ISensor[] sensors, Dictionary<string, int> pairs)
+        {
+            int j;
+            string k;
+            foreach (var sensor in sensors)
+            {
+                if (pairs.Count == 0)
+                {
+                    Console.Write(sensor.Name + " (" + sensor.Identifier.ToString() + ") = ");
+                    Console.Write(Math.Round(sensor.Value ?? 0));
+                    Console.WriteLine('%');
+                }
+                else
+                {
+                    k = sensor.Identifier.ToString();
+
+                    if (pairs.TryGetValue(k, out j))
+                    {
+                        sensor.Control.SetSoftware(j);
+                        Console.Write(sensor.Name + " (" + sensor.Identifier.ToString() + ") Set ");
+                        Console.Write(j);
+                        Console.WriteLine("%");
+                    }
+                }
+            }
         }
     }
 }
