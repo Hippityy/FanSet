@@ -73,18 +73,17 @@ namespace FanSet
                         {
                             if (pairs.Count == 0)
                             {
-                                Console.Write(sensor.Name);
-                                Console.Write(" == ");
+                                Console.Write(sensor.Name + "(" + sensor.Identifier.ToString() + ") == ");
                                 Console.Write(Math.Round(sensor.Value ?? 0));
                                 Console.WriteLine('%');
                             }
                             else
                             {
-                                k = sensor.Name.ToLower();
+                                k = sensor.Identifier.ToString();
 
                                 if (pairs.TryGetValue(k, out j))
                                 {
-                                    Console.Write(sensor.Name);
+                                    Console.Write(sensor.Identifier);
                                     Console.Write(" = ");
                                     sensor.Control.SetSoftware(j);
                                     Console.Write(j);
