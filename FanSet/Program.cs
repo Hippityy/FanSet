@@ -3,10 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenHardwareMonitor.Hardware;
+using LibreHardwareMonitor.Hardware;
 
 namespace FanSet
 {
+    internal class UpdateVisitor : IVisitor
+    {
+        public void VisitComputer(IComputer computer)
+        {
+            computer.Traverse(this);
+        }
+        public void VisitHardware(IHardware hardware)
+        {
+            hardware.Update();
+            foreach (IHardware subHardware in hardware.SubHardware) subHardware.Accept(this);
+        }
+        public void VisitSensor(ISensor sensor) { }
+        public void VisitParameter(IParameter parameter) { }
+    }
     internal class Program
     {
         static void Main(string[] args)
@@ -35,15 +49,17 @@ namespace FanSet
 
             Computer computer = new Computer
             {
-                GPUEnabled = false,
-                CPUEnabled = false,
-                MainboardEnabled = true,
-                HDDEnabled = false,
-                RAMEnabled = false,
-                FanControllerEnabled = true
+                IsCpuEnabled = false,
+                IsGpuEnabled = false,
+                IsMemoryEnabled = false,
+                IsMotherboardEnabled = true,
+                IsControllerEnabled = true,
+                IsNetworkEnabled = false,
+                IsStorageEnabled = false
             };
 
             computer.Open();
+            computer.Accept(new UpdateVisitor());
 
             foreach (var hardware in computer.Hardware)
             {
@@ -80,10 +96,6 @@ namespace FanSet
                 }
             }
             //computer.Close(); -- resets the fans, bad
-
-            //finally a nice usecase for reflection
-            Type.GetType("OpenHardwareMonitor.Hardware.Ring0, OpenHardwareMonitorLib").GetMethod("Close").Invoke(null, null);
-            Type.GetType("OpenHardwareMonitor.Hardware.Opcode, OpenHardwareMonitorLib").GetMethod("Close").Invoke(null, null);
         }
     }
 }
